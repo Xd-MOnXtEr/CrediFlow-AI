@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle, Cpu } from 'lucide-react';
 
 interface SettingsViewProps {
   history: any[];
@@ -8,6 +8,8 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) => {
+  const isApiKeyPresent = process.env.API_KEY && process.env.API_KEY !== 'undefined';
+
   const exportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
     const downloadAnchorNode = document.createElement('a');
@@ -24,10 +26,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">System Settings</h2>
-        <p className="text-slate-500 text-sm">Manage your data storage and cloud connectivity.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">System Settings</h2>
+          <p className="text-slate-500 text-sm">Manage your data storage and cloud connectivity.</p>
+        </div>
+        <div className={`px-4 py-2 rounded-full border flex items-center gap-2 text-xs font-bold transition-all ${
+          isApiKeyPresent ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
+        }`}>
+          <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />
+          AI ENGINE: {isApiKeyPresent ? 'CONNECTED' : 'KEY MISSING'}
+        </div>
       </div>
+
+      {!isApiKeyPresent && (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+          <AlertCircle className="text-amber-500 mt-0.5" size={18} />
+          <div>
+            <h4 className="text-sm font-bold text-amber-800">API Key Missing</h4>
+            <p className="text-xs text-amber-700 mt-1">
+              Analysis functions will not work. Please add <code className="bg-amber-100 px-1 rounded">API_KEY</code> to your Vercel Environment Variables and Redeploy.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Local Storage Stats */}

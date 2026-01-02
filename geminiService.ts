@@ -5,7 +5,7 @@ import { FinancialData, RiskAnalysisResult } from "./types";
 // Initialize AI only if API key exists, otherwise provide a placeholder
 const getAIClient = () => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey === "undefined") {
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
     throw new Error("API_KEY_MISSING");
   }
   return new GoogleGenAI({ apiKey });
@@ -66,6 +66,6 @@ export async function analyzeCreditRisk(data: FinancialData): Promise<RiskAnalys
       throw new Error("Google Gemini API Key is missing. Please add 'API_KEY' to your Vercel Environment Variables.");
     }
     console.error("AI Analysis Error:", error);
-    throw new Error("Analysis failed. Please try again later.");
+    throw new Error("Analysis failed. Please ensure your API key is correct and you have redeployed.");
   }
 }
