@@ -3,10 +3,21 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FinancialData, RiskAnalysisResult } from "./types";
 
 /**
+ * Utility to get the active API key with local override priority.
+ */
+const getActiveApiKey = (): string => {
+  const localKey = localStorage.getItem('crediflow_user_api_key');
+  if (localKey && localKey.trim() !== "") {
+    return localKey.trim();
+  }
+  return process.env.API_KEY || "";
+};
+
+/**
  * Analyzes credit risk using either Google Gemini Native SDK or OpenRouter.
  */
 export async function analyzeCreditRisk(data: FinancialData): Promise<RiskAnalysisResult> {
-  const apiKey = process.env.API_KEY || "";
+  const apiKey = getActiveApiKey();
   
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
     throw new Error("API_KEY_MISSING");
