@@ -11,6 +11,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
   const [showKey, setShowKey] = useState(false);
   const apiKey = process.env.API_KEY || '';
   const isApiKeyPresent = apiKey && apiKey !== 'undefined' && apiKey !== '';
+  const isOpenRouter = apiKey.startsWith('sk-or-');
 
   const exportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
@@ -34,10 +35,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
           <p className="text-slate-500 text-sm">Manage your data storage and cloud connectivity.</p>
         </div>
         <div className={`px-4 py-2 rounded-full border flex items-center gap-2 text-xs font-bold transition-all ${
-          isApiKeyPresent ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
+          isApiKeyPresent 
+            ? isOpenRouter ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+            : 'bg-rose-50 text-rose-700 border-rose-100'
         }`}>
-          <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />
-          AI ENGINE: {isApiKeyPresent ? 'GEMINI NATIVE' : 'KEY MISSING'}
+          {isOpenRouter ? <Zap size={14} className="text-amber-500 animate-pulse" /> : <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse text-emerald-500' : ''} />}
+          AI ENGINE: {isApiKeyPresent ? (isOpenRouter ? 'OPENROUTER' : 'GEMINI NATIVE') : 'KEY MISSING'}
         </div>
       </div>
 
@@ -92,7 +95,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
         {/* Diagnostics Tool */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-rose-50 text-rose-600 rounded-lg">
+            <div className={`p-2 rounded-lg ${isOpenRouter ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}`}>
               <Bug size={20} />
             </div>
             <div>
@@ -111,6 +114,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
             
             {isApiKeyPresent && (
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-xs font-bold text-slate-500">Infrastructure:</span>
+                <span className="text-xs font-bold text-indigo-600">
+                  {isOpenRouter ? 'OpenRouter API' : 'Google Gemini SDK'}
+                </span>
+              </div>
+            )}
+
+            {isApiKeyPresent && (
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-xs font-bold text-slate-500">Masked Key:</span>
                 <div className="flex items-center gap-2">
                   <code className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">
@@ -125,7 +137,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
             
             {!isApiKeyPresent && (
               <p className="text-[10px] text-rose-500 leading-tight">
-                <strong>Fix:</strong> Set the <code>API_KEY</code> environment variable in your deployment platform settings.
+                <strong>Fix:</strong> Set the <code>API_KEY</code> environment variable in your deployment platform settings. Use an OpenRouter (sk-or-...) or Gemini key.
               </p>
             )}
           </div>

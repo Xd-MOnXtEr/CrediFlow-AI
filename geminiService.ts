@@ -3,14 +3,16 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FinancialData, RiskAnalysisResult } from "./types";
 
 /**
- * Analyzes credit risk using the Google Gemini API.
- * This implementation strictly follows the @google/genai guidelines.
+ * Analyzes credit risk using either Google Gemini Native SDK or OpenRouter.
  */
 export async function analyzeCreditRisk(data: FinancialData): Promise<RiskAnalysisResult> {
-  // Ensure the API key is obtained exclusively from process.env.API_KEY
-  if (!process.env.API_KEY || process.env.API_KEY === "undefined" || process.env.API_KEY === "") {
+  const apiKey = process.env.API_KEY || "";
+  
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
     throw new Error("API_KEY_MISSING");
   }
+
+  const isOpenRouter = apiKey.startsWith('sk-or-');
 
   const prompt = `
     Act as a Senior Credit Risk Officer for a top Indian commercial bank (like HDFC, ICICI, or SBI).
@@ -33,46 +35,72 @@ export async function analyzeCreditRisk(data: FinancialData): Promise<RiskAnalys
     3. ROI for personal loans in India typically ranges from 10.5% to 24%.
     4. Provide specific pros and cons relevant to the Indian financial context.
     
-    RESPONSE FORMAT: Return a valid JSON object matching the provided schema.
+    RESPONSE FORMAT: Return a valid JSON object with the following keys:
+    status (Approved/Rejected/Manual Review), interestRate (number), riskScore (0-100), 
+    pros (string array), cons (string array), maxEligibleAmount (number), 
+    explanation (string), confidenceScore (number 0-1).
   `;
 
   try {
-    // Correct initialization: always use new GoogleGenAI({ apiKey: process.env.API_KEY })
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    // Using recommended model 'gemini-3-flash-preview' for basic text-based tasks
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            status: { type: Type.STRING, enum: ['Approved', 'Rejected', 'Manual Review'] },
-            interestRate: { type: Type.NUMBER },
-            riskScore: { type: Type.NUMBER },
-            pros: { type: Type.ARRAY, items: { type: Type.STRING } },
-            cons: { type: Type.ARRAY, items: { type: Type.STRING } },
-            maxEligibleAmount: { type: Type.NUMBER },
-            explanation: { type: Type.STRING },
-            confidenceScore: { type: Type.NUMBER },
-          },
-          required: ['status', 'interestRate', 'riskScore', 'pros', 'cons', 'maxEligibleAmount', 'explanation', 'confidenceScore'],
+    if (isOpenRouter) {
+      // OpenRouter Integration via REST
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "CrediFlow AI",
+          "Content-Type": "application/json"
         },
-      },
-    });
+        body: JSON.stringify({
+          "model": "google/gemini-2.0-flash-001",
+          "messages": [
+            { "role": "user", "content": prompt }
+          ],
+          "response_format": { "type": "json_object" }
+        })
+      });
 
-    // Directly access the text property as per latest SDK guidelines
-    const jsonStr = response.text;
-    
-    if (!jsonStr) {
-      throw new Error("The AI model returned an empty response.");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error?.message || `OpenRouter Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const content = result.choices[0]?.message?.content;
+      if (!content) throw new Error("OpenRouter returned an empty response.");
+      return JSON.parse(content);
+    } else {
+      // Native Gemini Integration
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              status: { type: Type.STRING, enum: ['Approved', 'Rejected', 'Manual Review'] },
+              interestRate: { type: Type.NUMBER },
+              riskScore: { type: Type.NUMBER },
+              pros: { type: Type.ARRAY, items: { type: Type.STRING } },
+              cons: { type: Type.ARRAY, items: { type: Type.STRING } },
+              maxEligibleAmount: { type: Type.NUMBER },
+              explanation: { type: Type.STRING },
+              confidenceScore: { type: Type.NUMBER },
+            },
+            required: ['status', 'interestRate', 'riskScore', 'pros', 'cons', 'maxEligibleAmount', 'explanation', 'confidenceScore'],
+          },
+        },
+      });
+
+      const jsonStr = response.text;
+      if (!jsonStr) throw new Error("The AI model returned an empty response.");
+      return JSON.parse(jsonStr.trim());
     }
-
-    return JSON.parse(jsonStr.trim());
   } catch (error: any) {
     console.error("AI Analysis Error:", error);
-    throw new Error(error.message || "Failed to perform credit risk analysis. Please check your configuration.");
+    throw new Error(error.message || "Failed to perform credit risk analysis.");
   }
 }
