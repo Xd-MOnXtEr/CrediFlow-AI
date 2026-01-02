@@ -1,11 +1,31 @@
-<div align="center">
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# 🚀 CrediFlow AI - Vercel Deployment Guide
 
-  <h1>Built with AI Studio</h2>
+Aapka platform ab Vercel par deploy hone ke liye 100% ready hai.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## ✅ Deployment Steps
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1. **GitHub Par Push Karein**:
+   - Apne saare files ko ek naye GitHub repository mein upload karein.
 
-</div>
+2. **Vercel Par Import Karein**:
+   - [Vercel Dashboard](https://vercel.com/dashboard) par jayein.
+   - **"Add New"** -> **"Project"** par click karein.
+   - Apne GitHub repo ko select karke **"Import"** karein.
+
+3. **Environment Variables (Important)**:
+   - Deployment se pehle "Environment Variables" section kholien.
+   - Name: `API_KEY`
+   - Value: `[Aapki Google Gemini API Key]`
+   - **"Add"** par click karein.
+
+4. **Deploy**:
+   - **"Deploy"** button dabayein. 2 minute mein aapki site live ho jayegi!
+
+## 🔧 Troubleshooting
+Agar error aata hai "API Key Missing":
+- Vercel Dashboard -> Settings -> Environment Variables mein check karein ki `API_KEY` sahi se add hua hai ya nahi.
+- Changes ke baad ek baar "Redeploy" karein.
+
+---
+*Developed for professional Indian Banking Credit Risk Assessment.*
