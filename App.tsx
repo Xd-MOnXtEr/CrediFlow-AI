@@ -48,8 +48,9 @@ const App: React.FC = () => {
       setResult(analysisResult);
       setHistory(prev => [newEntry, ...prev]);
       setActiveTab('analyze');
-    } catch (error) {
-      alert("Analysis failed. Please check your API Key in Vercel settings.");
+    } catch (error: any) {
+      console.error("Analysis Error:", error);
+      alert(error.message || "Analysis failed. Please check your API Key in Vercel settings.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle, Cpu, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle, Cpu, Zap, Bug, Eye, EyeOff } from 'lucide-react';
 
 interface SettingsViewProps {
   history: any[];
@@ -8,9 +8,9 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) => {
+  const [showKey, setShowKey] = useState(false);
   const apiKey = process.env.API_KEY || '';
-  const isApiKeyPresent = apiKey && apiKey !== 'undefined';
-  const isOpenRouter = apiKey.startsWith('sk-or-');
+  const isApiKeyPresent = apiKey && apiKey !== 'undefined' && apiKey !== '';
 
   const exportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
@@ -36,22 +36,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
         <div className={`px-4 py-2 rounded-full border flex items-center gap-2 text-xs font-bold transition-all ${
           isApiKeyPresent ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
         }`}>
-          {isOpenRouter ? <Zap size={14} className="text-amber-500" /> : <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />}
-          AI ENGINE: {isApiKeyPresent ? (isOpenRouter ? 'OPENROUTER' : 'GEMINI NATIVE') : 'KEY MISSING'}
+          <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />
+          AI ENGINE: {isApiKeyPresent ? 'GEMINI NATIVE' : 'KEY MISSING'}
         </div>
       </div>
-
-      {!isApiKeyPresent && (
-        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
-          <AlertCircle className="text-amber-500 mt-0.5" size={18} />
-          <div>
-            <h4 className="text-sm font-bold text-amber-800">API Key Missing</h4>
-            <p className="text-xs text-amber-700 mt-1">
-              Analysis functions will not work. Please add <code className="bg-amber-100 px-1 rounded">API_KEY</code> to your Vercel Environment Variables. Supports Gemini Native or OpenRouter keys.
-            </p>
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Local Storage Stats */}
@@ -101,39 +89,81 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
           </div>
         </div>
 
-        {/* Cloud Integration */}
-        <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl space-y-4 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Cloud size={80} />
-          </div>
-          
+        {/* Diagnostics Tool */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 text-indigo-400 rounded-lg">
-              <Cloud size={20} />
+            <div className="p-2 bg-rose-50 text-rose-600 rounded-lg">
+              <Bug size={20} />
             </div>
             <div>
-              <h3 className="font-bold">Cloud Sync</h3>
-              <p className="text-xs text-slate-400">Centralized Database</p>
+              <h3 className="font-bold text-slate-800">Diagnostic Info</h3>
+              <p className="text-xs text-slate-400">Environment Verification</p>
             </div>
           </div>
 
-          <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-            <div className="flex items-start gap-2 text-amber-400 mb-2">
-              <AlertCircle size={14} className="mt-0.5" />
-              <span className="text-[11px] font-bold uppercase tracking-wider">Not Connected</span>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-xs font-bold text-slate-500">API Key Status:</span>
+              <span className={`text-xs font-bold ${isApiKeyPresent ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {isApiKeyPresent ? 'LOADED ✓' : 'NOT FOUND ✗'}
+              </span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Connect to <strong>Supabase</strong> or <strong>Vercel Postgres</strong> to sync data across multiple devices.
-            </p>
+            
+            {isApiKeyPresent && (
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-xs font-bold text-slate-500">Masked Key:</span>
+                <div className="flex items-center gap-2">
+                  <code className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">
+                    {showKey ? apiKey : `${apiKey.substring(0, 4)}••••${apiKey.substring(apiKey.length - 4)}`}
+                  </code>
+                  <button onClick={() => setShowKey(!showKey)} className="text-slate-400 hover:text-indigo-600">
+                    {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {!isApiKeyPresent && (
+              <p className="text-[10px] text-rose-500 leading-tight">
+                <strong>Fix:</strong> Set the <code>API_KEY</code> environment variable in your deployment platform settings.
+              </p>
+            )}
           </div>
-
-          <button 
-            onClick={() => window.open('https://vercel.com/storage', '_blank')}
-            className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-indigo-900"
-          >
-            Connect Cloud Storage
-          </button>
         </div>
+      </div>
+
+      {/* Cloud Integration */}
+      <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl space-y-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Cloud size={80} />
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/10 text-indigo-400 rounded-lg">
+            <Cloud size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold">Cloud Sync</h3>
+            <p className="text-xs text-slate-400">Centralized Database</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+          <div className="flex items-start gap-2 text-amber-400 mb-2">
+            <AlertCircle size={14} className="mt-0.5" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Not Connected</span>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Connect to cloud storage providers to synchronize assessment history across your banking network.
+          </p>
+        </div>
+
+        <button 
+          onClick={() => window.open('https://vercel.com/storage', '_blank')}
+          className="max-w-xs py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-indigo-900"
+        >
+          Connect Cloud Storage
+        </button>
       </div>
     </div>
   );
