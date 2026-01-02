@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle, Cpu } from 'lucide-react';
+import { Database, Download, Trash2, Cloud, HardDrive, ShieldCheck, AlertCircle, Cpu, Zap } from 'lucide-react';
 
 interface SettingsViewProps {
   history: any[];
@@ -8,7 +8,9 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) => {
-  const isApiKeyPresent = process.env.API_KEY && process.env.API_KEY !== 'undefined';
+  const apiKey = process.env.API_KEY || '';
+  const isApiKeyPresent = apiKey && apiKey !== 'undefined';
+  const isOpenRouter = apiKey.startsWith('sk-or-');
 
   const exportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
@@ -34,8 +36,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
         <div className={`px-4 py-2 rounded-full border flex items-center gap-2 text-xs font-bold transition-all ${
           isApiKeyPresent ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
         }`}>
-          <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />
-          AI ENGINE: {isApiKeyPresent ? 'CONNECTED' : 'KEY MISSING'}
+          {isOpenRouter ? <Zap size={14} className="text-amber-500" /> : <Cpu size={14} className={isApiKeyPresent ? 'animate-pulse' : ''} />}
+          AI ENGINE: {isApiKeyPresent ? (isOpenRouter ? 'OPENROUTER' : 'GEMINI NATIVE') : 'KEY MISSING'}
         </div>
       </div>
 
@@ -45,7 +47,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
           <div>
             <h4 className="text-sm font-bold text-amber-800">API Key Missing</h4>
             <p className="text-xs text-amber-700 mt-1">
-              Analysis functions will not work. Please add <code className="bg-amber-100 px-1 rounded">API_KEY</code> to your Vercel Environment Variables and Redeploy.
+              Analysis functions will not work. Please add <code className="bg-amber-100 px-1 rounded">API_KEY</code> to your Vercel Environment Variables. Supports Gemini Native or OpenRouter keys.
             </p>
           </div>
         </div>
@@ -121,7 +123,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
               <span className="text-[11px] font-bold uppercase tracking-wider">Not Connected</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Connect to <strong>Supabase</strong> or <strong>Vercel Postgres</strong> to sync data across multiple devices and team members.
+              Connect to <strong>Supabase</strong> or <strong>Vercel Postgres</strong> to sync data across multiple devices.
             </p>
           </div>
 
@@ -131,27 +133,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ history, onClear }) 
           >
             Connect Cloud Storage
           </button>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2">
-          <Database size={18} className="text-indigo-600" />
-          Recommended Free Cloud Databases
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <a href="https://supabase.com" target="_blank" className="p-4 border border-slate-100 rounded-xl hover:border-indigo-200 transition-all">
-            <h4 className="font-bold text-slate-800 text-sm">Supabase</h4>
-            <p className="text-[10px] text-slate-500">PostgreSQL with 500MB free. Best for auth & storage.</p>
-          </a>
-          <a href="https://vercel.com/storage/postgres" target="_blank" className="p-4 border border-slate-100 rounded-xl hover:border-indigo-200 transition-all">
-            <h4 className="font-bold text-slate-800 text-sm">Vercel Postgres</h4>
-            <p className="text-[10px] text-slate-500">Seamless integration. 256MB free storage.</p>
-          </a>
-          <a href="https://www.mongodb.com/atlas" target="_blank" className="p-4 border border-slate-100 rounded-xl hover:border-indigo-200 transition-all">
-            <h4 className="font-bold text-slate-800 text-sm">MongoDB Atlas</h4>
-            <p className="text-[10px] text-slate-500">NoSQL JSON storage. High flexibility & speed.</p>
-          </a>
         </div>
       </div>
     </div>
